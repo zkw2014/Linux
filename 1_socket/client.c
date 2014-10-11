@@ -12,7 +12,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <stdio.h>
-#include <strings.h>
+#include <string.h>
 
 #define ERR_EXIT(m)\
 	do {\
@@ -26,7 +26,7 @@ int main(int argc, const char *argv[])
 {
 	//socket
 	int client_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (-1 == client_fd)
+	if (client_fd < 0)
 		ERR_EXIT("client socket");
 
 	//connect
@@ -35,18 +35,18 @@ int main(int argc, const char *argv[])
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_port = htons(8989);
 	server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-	if (-1 == connect(client_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)))
+	if (connect(client_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
 		ERR_EXIT("client connect");
 
 	//communication
 	char send_buf[1024] = {'\0'};
 	char recv_buf[1024] = {'\0'};
-	while (fgets(send_buf, 1024, stdin) != NULL) {
-		write(client_fd, send_buf, 1024);
-		read(client_fd, recv_buf, 1024);
+	while (fgets(send_buf, sizeof(send_buf), stdin) != NULL) {
+		write(client_fd, send_buf, strlen(send_buf));
+		read(client_fd, recv_buf, sizeof(recv_buf));
 		fputs(recv_buf, stdout);
-		bzero(send_buf, 1024);
-		bzero(recv_buf, 1024);
+		bzero(send_buf, sizeof(send_buf));
+		bzero(recv_buf, sizeof(recv_buf));
 	}
 
 	//close

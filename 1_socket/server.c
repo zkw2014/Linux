@@ -27,7 +27,7 @@ int main(int argc, const char *argv[])
 {
 	//socket
 	int listen_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (-1 == listen_fd)
+	if (listen_fd < 0)
 		ERR_EXIT("server socket");
 
 	//bind
@@ -37,11 +37,11 @@ int main(int argc, const char *argv[])
 	server_addr.sin_port = htons(8989);
 	server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 	
-	if (-1 == bind(listen_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)))
+	if (bind(listen_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
 		ERR_EXIT("server bind");
 
 	//listen
-	if (-1 == listen(listen_fd, SOMAXCONN))
+	if (listen(listen_fd, SOMAXCONN) < 0)
 		ERR_EXIT("server listen");
 
 	//accept
@@ -55,8 +55,7 @@ int main(int argc, const char *argv[])
 	char recv_buf[1024] = {'\0'};
 	while (1) {
 		bzero(recv_buf, sizeof(recv_buf));
-		int recv_len = 0;
-		recv_len = read(data_fd, recv_buf, 1024);
+		int recv_len = read(data_fd, recv_buf, sizeof(recv_buf));
 		if (0 == recv_len) {
 			printf("client close\n");
 			break;
@@ -64,7 +63,7 @@ int main(int argc, const char *argv[])
 		else if (recv_len < 0)
 			ERR_EXIT("server read");
 		//success
-		printf("%s", recv_buf);
+		fputs(recv_buf, stdout);
 		write(data_fd, recv_buf, recv_len);
 	}
 
