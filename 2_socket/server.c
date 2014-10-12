@@ -36,6 +36,11 @@ int main(int argc, const char *argv[])
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_port = htons(8989);
 	server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+
+	//deal with timewait
+	int on = 1;
+	if (setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
+		ERR_EXIT("server setsockopt");
 	
 	if (bind(listen_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
 		ERR_EXIT("server bind");
