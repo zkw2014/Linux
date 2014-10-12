@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+#include <signal.h>
 
 #define ERR_EXIT(m)\
 	do {\
@@ -20,8 +21,9 @@
 		exit(EXIT_FAILURE);\
 	} while(0)
 
-void child_read(int data_fd);
-void farther_write(int data_fd);
+void child_write(int data_fd);
+void farther_read(int data_fd);
+void handler(int signum);
 
 //socket bind listen accept read write close
 int main(int argc, const char *argv[])
@@ -61,21 +63,25 @@ int main(int argc, const char *argv[])
 	pid_t pid = fork();
 	if (pid < 0)
 		ERR_EXIT("fork");
-	else if (0 == pid) { //child read
+	else if (0 == pid) { //child write
+		signal(SIGUSR1, handler);
 		close(listen_fd);
-		child_read(data_fd);
+		child_write(data_fd);
 		close(data_fd);
+		printf("child close\n");
 		exit(EXIT_SUCCESS);
 	}
-	//farther write
-	farther_write(data_fd);
+	//farther read
+	farther_read(data_fd);
 	//farther close
 	close(data_fd);
 	close(listen_fd);
+	kill(pid, SIGUSR1);
+	printf("farther close\n");
 
 	return 0;
 }
-void child_read(int data_fd)
+void farther_read(int data_fd)
 {
 	//read display
 	char recv_buf[1024] = {'\0'};
@@ -93,11 +99,17 @@ void child_read(int data_fd)
 	}
 }
 
-void farther_write(int data_fd)
+void child_write(int data_fd)
 {
 	char send_buf[1024] = {'\0'};
 	while (fgets(send_buf, sizeof(send_buf), stdin) != NULL) {
 		write(data_fd, send_buf, strlen(send_buf));
 		bzero(send_buf, sizeof(send_buf));
 	}
+}
+
+void handler(int signum)
+{
+	printf("child close\n");
+	exit(EXIT_SUCCESS);
 }
