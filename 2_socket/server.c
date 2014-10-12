@@ -1,6 +1,6 @@
 /**************************************************************
-	> file: server.c
-	> by: zkw
+  > file: server.c
+  > by: zkw
  **************************************************************/
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -14,13 +14,13 @@
 #include <stdio.h>
 #include <strings.h>
 
-
-
 #define ERR_EXIT(m)\
 	do {\
 		perror(m);\
 		exit(EXIT_FAILURE);\
 	} while(0)
+
+void do_service(int data_fd);
 
 //socket bind listen accept read write close
 int main(int argc, const char *argv[])
@@ -41,7 +41,7 @@ int main(int argc, const char *argv[])
 	int on = 1;
 	if (setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
 		ERR_EXIT("server setsockopt");
-	
+
 	if (bind(listen_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
 		ERR_EXIT("server bind");
 
@@ -53,12 +53,32 @@ int main(int argc, const char *argv[])
 	int data_fd;
 	struct sockaddr_in peer_addr;
 	socklen_t peer_addr_len = sizeof(peer_addr);
-	if ((data_fd = accept(listen_fd, (struct sockaddr *)&peer_addr, &peer_addr_len)) < 0)
-		ERR_EXIT("server accept");
 
-	//print client's ip and port
-	printf("client's ip is :%s, port is :%d\n", inet_ntoa(peer_addr.sin_addr), ntohs(peer_addr.sin_port));
-	
+	while(1) {
+		if ((data_fd = accept(listen_fd, (struct sockaddr *)&peer_addr, &peer_addr_len)) < 0)
+			ERR_EXIT("server accept");
+		//print client's ip and port
+		printf("client's ip is :%s, port is :%d\n", inet_ntoa(peer_addr.sin_addr), ntohs(peer_addr.sin_port));
+
+		pid_t pid = fork();
+		if (pid < 0)
+			ERR_EXIT("fork");
+		else if (0 == pid) { //child
+			close(listen_fd);
+			do_service(data_fd);
+			close(data_fd);
+			exit(EXIT_SUCCESS);
+		}
+		//farther
+		close(data_fd);
+	}
+	//close
+	close(listen_fd);
+
+	return 0;
+}
+void do_service(int data_fd)
+{
 	//read display write
 	char recv_buf[1024] = {'\0'};
 	while (1) {
@@ -74,10 +94,4 @@ int main(int argc, const char *argv[])
 		fputs(recv_buf, stdout);
 		write(data_fd, recv_buf, recv_len);
 	}
-
-	//close
-	close(data_fd);
-	close(listen_fd);
-
-	return 0;
 }
