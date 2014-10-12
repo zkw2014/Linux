@@ -110,6 +110,7 @@ void child_write(int data_fd)
 
 void handler(int signum)
 {
+	printf("recv a sig = %d\n", signum);
 	printf("child close\n");
 	exit(EXIT_SUCCESS);
 }
