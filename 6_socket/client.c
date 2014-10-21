@@ -42,10 +42,9 @@ int main(int argc, const char *argv[])
 	server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 	if (connect(client_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
 		ERR_EXIT("client connect");
+
 	echo_cli(client_fd);
 
-	//close
-	close(client_fd);
 	return 0;
 }
 
@@ -67,6 +66,8 @@ void echo_cli(int client_fd)
 		bzero(send_buf, sizeof(send_buf));
 		bzero(recv_buf, sizeof(recv_buf));
 	}
+	//close
+	close(client_fd);
 }
 
 //return value:

@@ -4,6 +4,7 @@
  **************************************************************/
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/wait.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <errno.h>
@@ -13,6 +14,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <strings.h>
+#include <signal.h>
 
 #define ERR_EXIT(m)\
 	do {\
@@ -26,9 +28,16 @@ ssize_t writen(int fd, const void *buf, size_t count);
 ssize_t readline(int sockfd, void *buf, size_t count);
 ssize_t recv_peek(int sockfd, void *buf, size_t len);
 
+void handle_sigchld(int sig)
+{
+	while (waitpid(-1, NULL, WNOHANG) > 0);
+}
+
 //socket bind listen accept read write close
 int main(int argc, const char *argv[])
 {
+	signal(SIGCHLD, handle_sigchld);
+
 	//socket
 	int listen_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (listen_fd < 0)
@@ -80,6 +89,7 @@ int main(int argc, const char *argv[])
 
 	return 0;
 }
+
 void echo_srv(int data_fd)
 {
 	//read display write
