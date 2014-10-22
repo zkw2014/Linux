@@ -53,11 +53,12 @@ void echo_cli(int client_fd)
 {
 	//1.初始化集合
 	fd_set all_set;
+	FD_ZERO(&all_set);
 	int stdin_fd = fileno(stdin);
-	int maxfd = stdin_fd > client_fd ? stdin_fd : client_fd;
+	int maxfd = (stdin_fd > client_fd) ? stdin_fd : client_fd;
 	int readn = 0;
-	char send_buf[1024];
-	char recv_buf[1024];
+	char send_buf[1024] = {'\0'};
+	char recv_buf[1024] = {'\0'};
 
 	//2.while循环 调用select，得到一个新的集合
 	while (1) {
@@ -68,23 +69,25 @@ void echo_cli(int client_fd)
 		FD_SET(client_fd, &all_set);
 
 		readn = select(maxfd + 1, &all_set, NULL, NULL, NULL); //进行监听
-		if (readn < 0)
+		if (readn < 0 && errno == EINTR)
+			continue;
+		else if (readn < 0)
 			ERR_EXIT("select");
 		else if (0 == readn)
 			continue;
 
 		//3.分别进行判断
 		if (FD_ISSET(stdin_fd, &all_set)) {
-			char *p = fgets(send_buf, sizeof(send_buf), stdin);
-			writen(client_fd, send_buf, sizeof(send_buf));
-			if (p == NULL) {
+			if (fgets(send_buf, sizeof(send_buf), stdin) == NULL) {
 				shutdown(client_fd, SHUT_WR); //关闭写端，以后也不再监听标准输入，等待服务器端传完数据后，结束client.
 				FD_CLR(stdin_fd, &all_set);
 			}
+			writen(client_fd, send_buf, sizeof(send_buf));
 			--readn;
 			if (readn <= 0)
 				continue;
 		}
+
 		if (FD_ISSET(client_fd, &all_set)) {
 			int ret = readline(client_fd, recv_buf, sizeof(recv_buf));
 			if (0 == ret) {
