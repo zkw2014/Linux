@@ -62,12 +62,12 @@ int main(int argc, const char *argv[])
 	if (listen(listen_fd, SOMAXCONN) < 0)
 		ERR_EXIT("server listen");
 
-	//accept
-	int data_fd;
-	struct sockaddr_in peer_addr;
-	socklen_t peer_addr_len = sizeof(peer_addr);
-
 	while(1) {
+		//accept
+		int data_fd;
+		struct sockaddr_in peer_addr;
+		bzero(&peer_addr, sizeof(peer_addr));
+		socklen_t peer_addr_len = sizeof(peer_addr);
 		if ((data_fd = accept(listen_fd, (struct sockaddr *)&peer_addr, &peer_addr_len)) < 0)
 			ERR_EXIT("server accept");
 		//print client's ip and port
