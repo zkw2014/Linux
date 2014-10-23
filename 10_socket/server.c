@@ -28,23 +28,8 @@ ssize_t readn(int fd, void *buf, size_t count);
 ssize_t writen(int fd, const void *buf, size_t count);
 ssize_t readline(int sockfd, void *buf, size_t count);
 ssize_t recv_peek(int sockfd, void *buf, size_t len);
-
-void handle_sigchld(int sig)
-{
-	while (waitpid(-1, NULL, WNOHANG) > 0);
-}
-
-void *thread_func(void *arg)
-{
-	int *p = (int *)arg;
-	int data_fd = *p;
-	free(p);
-	pthread_detach(pthread_self());
-	echo_srv(data_fd);
-	close(data_fd);
-
-	return NULL;
-}
+void *thread_func(void *arg);
+void handle_sigchld(int sig);
 
 //socket bind listen accept read write close
 int main(int argc, const char *argv[])
@@ -79,7 +64,6 @@ int main(int argc, const char *argv[])
 	int data_fd;
 	struct sockaddr_in peer_addr;
 	socklen_t peer_addr_len = sizeof(peer_addr);
-
 	while(1) {
 		if ((data_fd = accept(listen_fd, (struct sockaddr *)&peer_addr, &peer_addr_len)) < 0)
 			ERR_EXIT("server accept");
@@ -87,6 +71,8 @@ int main(int argc, const char *argv[])
 
 		pthread_t tid;
 		int *p = (int *)malloc(sizeof(int)); //注意这里要用动态内存分配
+		if (NULL == p)
+			ERR_EXIT("malloc");
 		*p = data_fd;
 		if (pthread_create(&tid, NULL, thread_func, p) != 0) {
 			fprintf(stderr, "error:%s\n", "pthread_create");
@@ -97,8 +83,25 @@ int main(int argc, const char *argv[])
 
 	//close
 	close(listen_fd);
-
 	return 0;
+}
+
+void handle_sigchld(int sig)
+{
+	while (waitpid(-1, NULL, WNOHANG) > 0);
+}
+
+void *thread_func(void *arg)
+{
+	int *p = (int *)arg;
+	int data_fd = *p;
+	free(p);
+
+	pthread_detach(pthread_self());
+	echo_srv(data_fd);
+	close(data_fd);
+
+	return NULL;
 }
 
 void echo_srv(int data_fd)
