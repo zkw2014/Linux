@@ -57,13 +57,16 @@ int main(int argc, const char *argv[])
 
 void echo_cli(int client_fd)
 {
-	//1.建立句柄，添加监听符
+	//1.建立句柄
 	int epoll_fd = epoll_create(EPOLL_SIZE);
+	if (-1 == epoll_fd)
+		ERR_EXIT("epoll_create");
 	struct epoll_event event_arr[MAX_EVENTS], ev;
 	bzero(event_arr, sizeof(event_arr));
 	bzero(&ev, sizeof(ev));
 	int stdin_fd = fileno(stdin);
 
+	//注册两个监听符
 	ev.events = EPOLLIN;
 	ev.data.fd = stdin_fd;
 	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, stdin_fd, &ev) < 0)
@@ -85,7 +88,7 @@ void echo_cli(int client_fd)
 		if (readn < 0 && errno == EINTR)
 			continue;
 		else if (readn < 0)
-			ERR_EXIT("select");
+			ERR_EXIT("epoll_wait");
 		else if (0 == readn)
 			continue;
 
@@ -96,7 +99,9 @@ void echo_cli(int client_fd)
 			if (fd == stdin_fd) {
 				if (fgets(send_buf, sizeof(send_buf), stdin) == NULL) {
 					shutdown(client_fd, SHUT_WR); //关闭写端，以后也不再监听标准输入，等待服务器端传完数据后，结束client.
-					if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, stdin_fd, NULL) < 0)
+					ev.events = EPOLLIN;
+					ev.data.fd = stdin_fd;
+					if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, stdin_fd, &ev) < 0)
 						ERR_EXIT("epoll_ctl");
 				}
 				writen(client_fd, send_buf, sizeof(send_buf));
@@ -107,9 +112,13 @@ void echo_cli(int client_fd)
 				if (0 == ret) {
 					printf("server close\n");
 					//清空句柄
-					if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_fd, NULL) < 0)
+					ev.events = EPOLLIN;
+					ev.data.fd = client_fd;
+					if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_fd, &ev) < 0)
 						ERR_EXIT("epoll_ctl");
-					if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, stdin_fd, NULL) < 0)
+					ev.events = EPOLLIN;
+					ev.data.fd = stdin_fd;
+					if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, stdin_fd, &ev) < 0)
 						ERR_EXIT("epoll_ctl");
 					close(client_fd);
 					return;
