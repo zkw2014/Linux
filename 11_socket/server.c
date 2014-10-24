@@ -26,7 +26,7 @@
 
 #define MAX_DATA_FD_SIZE 1024
 
-void echo_srv(int listen_fd);
+void do_select_srv(int listen_fd);
 ssize_t readn(int fd, void *buf, size_t count);
 ssize_t writen(int fd, const void *buf, size_t count);
 ssize_t readline(int sockfd, void *buf, size_t count);
@@ -66,7 +66,7 @@ int main(int argc, const char *argv[])
 	if (listen(listen_fd, SOMAXCONN) < 0)
 		ERR_EXIT("server listen");
 
-	echo_srv(listen_fd);
+	do_select_srv(listen_fd);
 
 	close(listen_fd);
 	return 0;
@@ -75,7 +75,7 @@ int main(int argc, const char *argv[])
 //第一步：建立一个集合，把listen_fd添加进去
 //第二步：while(1), 然后进行监听
 //第三步：对监听到的事件分别进行处理
-void echo_srv(int listen_fd)
+void do_select_srv(int listen_fd)
 {
 	//第一步：初始化和准备工作
 	fd_set all_fds, read_fds;
@@ -89,7 +89,7 @@ void echo_srv(int listen_fd)
 		arr_client_fd[ix] = -1;
 	int max_ix = -1;
 
-	while(1) {
+	while (1) {
 		read_fds = all_fds; //每次循环都要更新read_fds
 
 		//第二步：监听
