@@ -14,24 +14,20 @@ void pool_init(thread_pool_t *pool_ptr, unsigned int thread_nums)
 		fprintf(stderr, "malloc");
 		exit(EXIT_FAILURE);
 	}
-
 	//队列
 	queue_init( &(pool_ptr->queue_) );
-
 	//互斥锁
 	int temp = pthread_mutex_init(&pool_ptr->mutex_lock_, NULL);
 	if (0 != temp) {
 		fprintf(stderr, "pthread_mutex_init");
 		exit(EXIT_FAILURE);
 	}
-
 	//条件锁
 	temp = pthread_cond_init(&pool_ptr->cond_lock_, NULL);
 	if (0 != temp) {
 		fprintf(stderr, "pthread_cond_init");
 		exit(EXIT_FAILURE);
 	}
-
 	//状态
 	pool_ptr->is_started_ = false;
 }
@@ -40,27 +36,22 @@ void pool_destroy(thread_pool_t *pool_ptr)
 {
 	if (pool_ptr->is_started_) //停止线程池
 		pool_stop(pool_ptr);
-
 	//释放线程数组空间
 	free(pool_ptr->threads_);
-
 	//销毁队列
 	queue_destroy(&pool_ptr->queue_);
-
 	//互斥锁
 	int temp = pthread_mutex_destroy(&pool_ptr->mutex_lock_);
 	if (0 != temp) {
 		fprintf(stderr, "pthread_mutex_destroy");
 		exit(EXIT_FAILURE);
 	}
-
 	//条件锁
 	temp = pthread_cond_destroy(&pool_ptr->cond_lock_);
 	if (0 != temp) {
 		fprintf(stderr, "pthread_cond_destroy");
 		exit(EXIT_FAILURE);
 	}
-
 	//状态
 	pool_ptr->is_started_ = false;
 }
@@ -88,14 +79,12 @@ void *thread_func(void *arg)
 			}
 		}
 	}
-
 	//解锁
 	temp = pthread_mutex_unlock(&pool_ptr->mutex_lock_);
 	if (0 != temp) {
 		fprintf(stderr, "pthread_mutex_lock");
 		exit(EXIT_FAILURE);
 	}
-
 	//线程退出
 	pthread_exit(NULL);
 }
@@ -125,7 +114,6 @@ void pool_stop(thread_pool_t *pool_ptr)
 		fprintf(stderr, "pthread_create");
 		exit(EXIT_FAILURE);
 	}
-
 	//回收线程群
 	int ix = 0;
 	for (; ix != pool_ptr->thread_nums_; ++ix) {
@@ -150,17 +138,14 @@ void add_task_to_pool(thread_pool_t *pool_ptr, FUNC data)
 		fprintf(stderr, "pthread_mutex_lock");
 		exit(EXIT_FAILURE);
 	}
-
 	//将任务添加到队列中
 	queue_push(&pool_ptr->queue_, data);
-
 	//激活阻塞在条件队列中的线程
 	temp = pthread_cond_signal(&pool_ptr->cond_lock_);
 	if (0 != temp) {
 		fprintf(stderr, "pthread_cond_signal");
 		exit(EXIT_FAILURE);
 	}
-
 	//解锁
 	temp = pthread_mutex_unlock(&pool_ptr->mutex_lock_);
 	if (0 != temp) {

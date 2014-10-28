@@ -1,7 +1,7 @@
 /************************************************************************
-    > File: def.h
-    > By: zkw
-    > Description: 
+  > File: def.h
+  > By: zkw
+  > Description: 
  ************************************************************************/
 
 #ifndef DEF_H
@@ -25,6 +25,7 @@
 
 typedef enum {false, true} bool;
 typedef void (*FUNC)(void);
+
 typedef struct task
 {
 	FUNC data_;
@@ -63,6 +64,5 @@ void pool_start(thread_pool_t *pool_ptr);
 void pool_stop(thread_pool_t *pool_ptr);
 bool pool_is_running(const thread_pool_t *pool_ptr);
 void add_task_to_pool(thread_pool_t *pool_ptr, FUNC data);
-
 
 #endif //DEF_H

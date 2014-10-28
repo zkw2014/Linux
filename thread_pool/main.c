@@ -1,7 +1,7 @@
 /************************************************************************
-    > File: main.c
-    > By: zkw
-    > Description: 
+  > File: main.c
+  > By: zkw
+  > Description: 
  ************************************************************************/
 
 #include <stdio.h>
@@ -13,7 +13,6 @@ void user_func(void)
 {
 	printf("hello\n");
 }
-
 
 int main(void)
 {
@@ -28,7 +27,7 @@ int main(void)
 
 	pool_stop(&pool);
 	pool_destroy(&pool);
-	
+
 	return 0;
 }
 
