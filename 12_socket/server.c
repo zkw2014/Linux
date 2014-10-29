@@ -94,7 +94,7 @@ void do_poll_srv(int listen_fd)
 		if (nread < 0 && errno == EINTR)
 			continue;
 		else if (nread < 0)
-			ERR_EXIT("select");
+			ERR_EXIT("poll");
 		else if (0 == nread)
 			continue;
 
@@ -145,9 +145,11 @@ void do_poll_srv(int listen_fd)
 				}
 				else if (recv_len < 0)
 					ERR_EXIT("server read");
-				//success
-				fputs(recv_buf, stdout);
-				writen(data_fd, recv_buf, recv_len);
+				else {
+					//success
+					fputs(recv_buf, stdout);
+					writen(data_fd, recv_buf, recv_len);
+				}
 				--nread;
 				if (nread <= 0)
 					break;
