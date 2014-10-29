@@ -22,6 +22,7 @@ int main(void)
 	thread_pool_t pool;
 	pool_init(&pool, THREAD_NUMS);
 	pool_start(&pool);
+	sleep(1); //目的是让所有的线程都完全启动
 
 	int times = 0;
 	srand(time(NULL));
