@@ -23,7 +23,7 @@ void queue_destroy(queue_t *queue_ptr)
 	assert(queue_ptr->is_empty_);
 }
 
-void queue_push(queue_t *queue_ptr, FUNC data)
+void queue_push(queue_t *queue_ptr, FUNC data, int parameter)
 {
 	//在堆上开辟节点空间
 	task_t *temp = (task_t *)malloc(sizeof (task_t));
@@ -33,6 +33,7 @@ void queue_push(queue_t *queue_ptr, FUNC data)
 	}
 	bzero(temp, sizeof(task_t));
 	temp->data_ = data;
+	temp->parameter_ = parameter;
 
 	if (queue_ptr->is_empty_) { //队列空时，单独处理
 		queue_ptr->head_ = queue_ptr->tail_ = temp;
@@ -64,6 +65,7 @@ void queue_pop(queue_t *queue_ptr)
 
 task_t queue_top(queue_t queue)
 {
+	assert(!queue.is_empty_);
 	return *(queue.head_);
 }
 

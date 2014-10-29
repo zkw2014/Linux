@@ -24,11 +24,12 @@
 	} while (0)
 
 typedef enum {false, true} bool;
-typedef void (*FUNC)(void);
+typedef void (*FUNC)(void *);
 
 typedef struct task
 {
 	FUNC data_;
+	int parameter_;
 	struct task *next_;
 } task_t;
 
@@ -52,7 +53,7 @@ typedef struct
 
 void queue_init(queue_t *queue_ptr);
 void queue_destroy(queue_t *queue_ptr);
-void queue_push(queue_t *queue_ptr, FUNC data);
+void queue_push(queue_t *queue_ptr, FUNC data, int parameter);
 void queue_pop(queue_t *queue_ptr);
 task_t queue_top(queue_t queue);
 bool queue_is_empty(queue_t queue);
@@ -63,6 +64,6 @@ void pool_destroy(thread_pool_t *pool_ptr);
 void pool_start(thread_pool_t *pool_ptr);
 void pool_stop(thread_pool_t *pool_ptr);
 bool pool_is_running(const thread_pool_t *pool_ptr);
-void add_task_to_pool(thread_pool_t *pool_ptr, FUNC data);
+void add_task_to_pool(thread_pool_t *pool_ptr, FUNC data, int parameter);
 
 #endif //DEF_H
